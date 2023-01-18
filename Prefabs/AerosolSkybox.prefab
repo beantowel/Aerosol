@@ -1,0 +1,59 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &3211011496637939510
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1993858756396349571}
+  - component: {fileID: 3813275628252301043}
+  m_Layer: 0
+  m_Name: AerosolSkybox
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 2147483647
+  m_IsActive: 1
+--- !u!4 &1993858756396349571
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3211011496637939510}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_RootOrder: 0
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &3813275628252301043
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3211011496637939510}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 005f94f7a17da404f8ab42c79494d4bc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  Assets:
+    Skybox: {fileID: 2100000, guid: 5620b6786a8eebc43ac41b78dc3267fe, type: 2}
+    ComputeTransmittance: {fileID: 2100000, guid: c1d8b5444b9bf7e468a4c0540510ce8e,
+      type: 2}
+    ComputeDirectIrradiance: {fileID: 2100000, guid: 048b0ea5660a3a1428e609436fd40e8c,
+      type: 2}
+    ComputeSingleScattering: {fileID: 2100000, guid: 4340bb753ab0a674dbd95addfdb786bd,
+      type: 2}
+    ComputeScatteringDensity: {fileID: 2100000, guid: 57f4ada913c7c544daacecd6d716bbef,
+      type: 2}
+    ComputeIndirectIrradiance: {fileID: 2100000, guid: 3cfbf107681c35642af86dbb9f855b25,
+      type: 2}
+    ComputeMultipleScattering: {fileID: 2100000, guid: 386b54bba7dbccc4489b4259a5c6fa9e,
+      type: 2}
