@@ -38,27 +38,23 @@ Shader "Aerosol/Skybox"
             struct appdata
             {
                 float4 vertex : POSITION;
-                UNITY_VERTEX_INPUT_INSTANCE_ID
             };
 
             struct v2f
             {
                 float4 pos : SV_POSITION;
                 float3 view_ray : TEXCOORD0;
-                UNITY_VERTEX_OUTPUT_STEREO
             };
 
             v2f vert (appdata v)
             {
                 v2f output;
-                UNITY_SETUP_INSTANCE_ID(v);
-                UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(OUT);
                 output.pos = UnityObjectToClipPos(v.vertex);
                 output.view_ray = mul((float3x3)unity_ObjectToWorld, v.vertex.xyz);
                 return output;
             }
 
-            float4 frag (v2f i) : SV_Target
+            half4 frag (v2f i) : SV_Target
             {
                 float3 view_direction = normalize(i.view_ray);
                 float3 sun_direction = normalize(_WorldSpaceLightPos0.xyz);
@@ -71,6 +67,7 @@ Shader "Aerosol/Skybox"
                 float shadow_out = 0;
                 float shadow_in = 0;
 
+                // Compute the radiance reflected by the ground, if the ray intersects it.
                 // Compute the distance between the view ray line and the Earth center,
                 // and the distance between the camera and the intersection of the view
                 // ray with the ground (or NaN if there is no intersection).
@@ -79,29 +76,27 @@ Shader "Aerosol/Skybox"
                 float p_dot_v = dot(p, view_direction);
                 float p_dot_p = dot(p, p);
                 float ray_earth_center_squared_distance = p_dot_p - p_dot_v * p_dot_v;
-                float distance_to_intersection = -p_dot_v - sqrt(
-                    earth_center.y * earth_center.y - ray_earth_center_squared_distance);
-
-                // Compute the radiance reflected by the ground, if the ray intersects it.
-                if (distance_to_intersection > 0.0) {
-                    float3 pnt = camera + view_direction * distance_to_intersection;
-                    float3 normal = normalize(pnt - earth_center);
+                float delta_intersection_square = earth_center.y * earth_center.y - ray_earth_center_squared_distance;
+                float distance_to_intersection = -p_dot_v - sqrt(delta_intersection_square);
+                if (delta_intersection_square > 0 && distance_to_intersection > 0) {
+                    float3 pnt = p + view_direction * distance_to_intersection;
+                    float3 normal = normalize(pnt);
 
                     // Compute the radiance reflected by the ground.
                     float3 sky_illuminance;
                     float3 sun_illuminance = GetSunAndSkyIlluminance(
-                        pnt - earth_center, normal, sun_direction, sky_illuminance);
+                        pnt, normal, sun_direction, sky_illuminance);
                     // TODO: visibility term
                     float visibility = 1;
                     ground_luminance = ground_albedo * (1.0 / PI) *
                         (sun_illuminance + sky_illuminance) * visibility;
 
-                    float shadow_length =
+                    float shadow_length = 
                         max(0.0, min(shadow_out, distance_to_intersection) - shadow_in) *
                         lightshaft_fadein_hack;
                     float3 transmittance;
-                    float3 in_scatter = GetSkyLuminanceToPoint(camera - earth_center,
-                        pnt - earth_center, shadow_length, sun_direction, transmittance);
+                    float3 in_scatter = GetSkyLuminanceToPoint(p, pnt,
+                        shadow_length, sun_direction, transmittance);
                     ground_luminance = ground_luminance * transmittance + in_scatter;
                     ground_alpha = 1.0;
                 }
@@ -118,8 +113,9 @@ Shader "Aerosol/Skybox"
                 }
                 luminance = lerp(luminance, ground_luminance, ground_alpha);
 
-                float3 rgb = pow(1 - exp(-luminance/ white_point * exposure), 1/2.2);
-                return float4(rgb, 1);
+                // tone mapping & sRGB -> linearRGB (gamma)
+                float3 rgb = pow(1 - exp(-luminance / white_point * exposure), 2.2);
+                return half4(rgb , 1);
             }
             ENDHLSL
         }

@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Assertions;
-using UnityEngine.Rendering;
 
 namespace Aerosol {
     [System.Serializable]
@@ -41,28 +40,27 @@ namespace Aerosol {
         public List<double> GroundAlbedo;
         public double MaxSunZenithAngle;
         public double LengthUnitInMeters;
-        public bool HalfPrecision;
     }
 
     class Model {
         Assets assets;
-        bool halfPrecision;
-        public RenderTexture transmittance;
-        public RenderTexture scattering;
-        public RenderTexture irradiance;
+        public RenderTexture Transmittance;
+        public RenderTexture Scattering;
+        public RenderTexture Irradiance;
+
+        public RenderTextureDescriptor TrnDesc, SctDesc, IrrDesc;
 
         public Model(
             ModelParams para,
             Assets assets
         ) {
-            this.halfPrecision = para.HalfPrecision;
             this.assets = assets;
-            transmittance = Util.NewTexture2D(Const.TransmittanceTextureSize.Width, Const.TransmittanceTextureSize.Height);
-            scattering = Util.NewTexture3D(halfPrecision);
-            irradiance = Util.NewTexture2D(Const.IrradianceTextureSize.Width, Const.IrradianceTextureSize.Height);
-            assets.Skybox.SetTexture("transmittance_texture", transmittance);
-            assets.Skybox.SetTexture("scattering_texture", scattering);
-            assets.Skybox.SetTexture("irradiance_texture", irradiance);
+            TrnDesc = Util.Tex2Desc(Const.TransmittanceTextureSize.Width, Const.TransmittanceTextureSize.Height);
+            SctDesc = Util.Tex3Desc();
+            IrrDesc = Util.Tex2Desc(Const.IrradianceTextureSize.Width, Const.IrradianceTextureSize.Height);
+            Transmittance = new RenderTexture(TrnDesc);
+            Scattering = new RenderTexture(SctDesc);
+            Irradiance = new RenderTexture(IrrDesc);
         }
 
         ~Model() {
@@ -74,12 +72,10 @@ namespace Aerosol {
             // order of scattering (the final precomputed textures store the sum of all
             // the scattering orders). We allocate them here, and destroy them at the end
             // of this method.
-            RenderTexture deltaIrradiance = Util.NewTexture2D(
-                Const.IrradianceTextureSize.Width,
-                Const.IrradianceTextureSize.Height, true);
-            RenderTexture deltaRayleighScattering = Util.NewTexture3D(halfPrecision, true);
-            RenderTexture deltaMieScattering = Util.NewTexture3D(halfPrecision, true);
-            RenderTexture deltaScatteringDensity = Util.NewTexture3D(halfPrecision, true);
+            RenderTexture deltaIrradiance = RenderTexture.GetTemporary(IrrDesc);
+            RenderTexture deltaRayleighScattering = RenderTexture.GetTemporary(SctDesc);
+            RenderTexture deltaMieScattering = RenderTexture.GetTemporary(SctDesc);
+            RenderTexture deltaScatteringDensity = RenderTexture.GetTemporary(SctDesc);
             // delta_multiple_scattering_texture is only needed to compute scattering
             // order 3 or more, while delta_rayleigh_scattering_texture and
             // delta_mie_scattering_texture are only needed to compute double scattering.
@@ -97,7 +93,7 @@ namespace Aerosol {
             RenderTexture.ReleaseTemporary(deltaScatteringDensity);
         }
 
-        public void PreCompute(
+        void PreCompute(
             RenderTexture deltaIrradiance,
             RenderTexture deltaRayleighScattering,
             RenderTexture deltaMieScattering,
@@ -106,29 +102,30 @@ namespace Aerosol {
             Matrix4x4 luminanceFromRadiance,
             uint numScatteringOrders
         ) {
+            Debug.Log("pre-compute model");
             // Compute the transmittance, and store it in transmittance_texture_.
-            Util.DrawRect(assets.ComputeTransmittance, transmittance);
+            Util.DrawRect(assets.ComputeTransmittance, Transmittance);
 
             // Compute the direct irradiance, store it in delta_irradiance_texture.
             // (we don't want the direct irradiance in irradiance_texture_,
             // but only the irradiance from the sky).
-            assets.ComputeDirectIrradiance.SetTexture("transmittance_texture", transmittance);
+            assets.ComputeDirectIrradiance.SetTexture("transmittance_texture", Transmittance);
             Util.DrawRect(assets.ComputeDirectIrradiance,
-                deltaIrradiance, irradiance);
+                deltaIrradiance, Irradiance);
 
             // Compute the rayleigh and mie single scattering, store them in
             // delta_rayleigh_scattering_texture and delta_mie_scattering_texture, and
             // either store them or accumulate them in scattering_texture_ and
             // optional_single_mie_scattering_texture_.
             assets.ComputeSingleScattering.SetMatrix("luminance_from_radiance", luminanceFromRadiance);
-            assets.ComputeSingleScattering.SetTexture("transmittance_texture", transmittance);
+            assets.ComputeSingleScattering.SetTexture("transmittance_texture", Transmittance);
             Util.DrawCube(assets.ComputeSingleScattering,
-                deltaRayleighScattering, deltaMieScattering, scattering);
+                deltaRayleighScattering, deltaMieScattering, Scattering);
             // Compute the 2nd, 3rd and 4th order of scattering, in sequence.
             for (uint order = 2; order <= numScatteringOrders; order++) {
                 // Compute the scattering density, and store it in
                 // delta_scattering_density_texture.
-                assets.ComputeScatteringDensity.SetTexture("transmittance_texture", transmittance);
+                assets.ComputeScatteringDensity.SetTexture("transmittance_texture", Transmittance);
                 assets.ComputeScatteringDensity.SetTexture("single_rayleigh_scattering_texture", deltaRayleighScattering);
                 assets.ComputeScatteringDensity.SetTexture("single_mie_scattering_texture", deltaMieScattering);
                 assets.ComputeScatteringDensity.SetTexture("multiple_scattering_texture", deltaMultipleScattering);
@@ -144,16 +141,16 @@ namespace Aerosol {
                 assets.ComputeIndirectIrradiance.SetTexture("multiple_scattering_texture", deltaMultipleScattering);
                 assets.ComputeIndirectIrradiance.SetInteger("scattering_order", (int)order - 1);
                 deltaIrradiance.DiscardContents();
-                Util.DrawRect(assets.ComputeIndirectIrradiance, deltaIrradiance, irradiance);
+                Util.DrawRect(assets.ComputeIndirectIrradiance, deltaIrradiance, Irradiance);
 
                 // Compute the multiple scattering, store it in
                 // delta_multiple_scattering_texture, and accumulate it in
                 // scattering_texture_.
                 assets.ComputeMultipleScattering.SetMatrix("luminance_from_radiance", luminanceFromRadiance);
-                assets.ComputeMultipleScattering.SetTexture("transmittance_texture", transmittance);
+                assets.ComputeMultipleScattering.SetTexture("transmittance_texture", Transmittance);
                 assets.ComputeMultipleScattering.SetTexture("scattering_density_texture", deltaScatteringDensity);
                 deltaMultipleScattering.DiscardContents();
-                Util.DrawCube(assets.ComputeMultipleScattering, deltaMultipleScattering, scattering);
+                Util.DrawCube(assets.ComputeMultipleScattering, deltaMultipleScattering, Scattering);
             }
         }
 
@@ -176,7 +173,7 @@ namespace Aerosol {
             return new Vector3((float)x, (float)y, (float)z);
         }
 
-        public static double Interpolate(
+        static double Interpolate(
             in List<double> wavelengths,
             in List<double> wavelengthFunction,
             double wavelength) {
@@ -194,7 +191,7 @@ namespace Aerosol {
         }
 
         // The returned constants are in lumen.nm / watt.
-        public static Vector3 ComputeSpectralRadianceToLuminanceFactors(
+        static Vector3 ComputeSpectralRadianceToLuminanceFactors(
             List<double> wavelengths,
             List<double> solarIrradiance,
             double lambdaPower) {

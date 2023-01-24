@@ -222,7 +222,6 @@ namespace Aerosol {
             var mieExtinction = new List<double>(nLambda);
             var absorptionExtinction = new List<double>(nLambda);
             var groundAlbedo = new List<double>(nLambda);
-            var half_precision = true;
 
             for (int l = LambdaMin; l <= LambdaMax; l += DeltaLambda) {
                 int index = (l - LambdaMin) / DeltaLambda;
@@ -252,9 +251,8 @@ namespace Aerosol {
                 AbsorptionDensity = OzoneDensity,
                 AbsorptionExtinction = absorptionExtinction,
                 GroundAlbedo = groundAlbedo,
-                MaxSunZenithAngle = MaxSunZenithAngle(half_precision),
+                MaxSunZenithAngle = MaxSunZenithAngle(true),
                 LengthUnitInMeters = LengthUnitInMeters,
-                HalfPrecision = half_precision,
             };
         }
     }

@@ -5,8 +5,7 @@ namespace Aerosol {
     [ExecuteAlways]
     class Aerosol : MonoBehaviour {
         public Assets Assets;
-
-        Model model;
+        static Model model;
 
         void Awake() {
             Init();
@@ -15,10 +14,13 @@ namespace Aerosol {
         void Init() {
             model = new Model(Const.DefaultParam(), Assets);
             model.Init();
+            Assets.Skybox.SetTexture("transmittance_texture", model.Transmittance);
+            Assets.Skybox.SetTexture("scattering_texture", model.Scattering);
+            Assets.Skybox.SetTexture("irradiance_texture", model.Irradiance);
         }
 
-        [MenuItem("Window/Aerosol/GenHLSLHeader")]
-        static void GenHLSLHeader() {
+        [ContextMenu("GenHeader")]
+        void GenHeader() {
             var path = Path.Combine(Application.dataPath,
                 "beantowel/Aerosol/Shaders/header.hlsl");
             var header = Model.Header(Const.DefaultParam(), Const.Lambdas);

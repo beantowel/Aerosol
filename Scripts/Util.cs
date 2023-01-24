@@ -33,22 +33,22 @@ namespace Aerosol {
             }
         }
 
-        public static RenderTexture NewTexture2D(int width, int height, bool isTemp = false) {
+        public static RenderTextureDescriptor Tex2Desc(int width, int height) {
             var desc = new RenderTextureDescriptor(
-                width, height, RenderTextureFormat.ARGBFloat, 0);
-            return isTemp ?
-                RenderTexture.GetTemporary(width, height, 0, RenderTextureFormat.ARGBFloat) :
-                new RenderTexture(width, height, 0, RenderTextureFormat.ARGBFloat);
+                width, height, RenderTextureFormat.ARGBHalf, 0);
+            desc.sRGB = false;
+            return desc;
         }
 
-        public static RenderTexture NewTexture3D(bool halfPrecision, bool isTemp = false) {
+        public static RenderTextureDescriptor Tex3Desc() {
             var desc = new RenderTextureDescriptor(
                 Const.ScatteringTextureSize.Width,
                 Const.ScatteringTextureSize.Height,
-                halfPrecision ? RenderTextureFormat.ARGBHalf : RenderTextureFormat.ARGBFloat, 0);
+                RenderTextureFormat.ARGBHalf, 0);
             desc.dimension = TextureDimension.Tex3D;
             desc.volumeDepth = Const.ScatteringTextureSize.Depth;
-            return isTemp ? RenderTexture.GetTemporary(desc) : new RenderTexture(desc);
+            desc.sRGB = false;
+            return desc;
         }
 
         public static Mesh FullSceneTri(float scale = 1) {

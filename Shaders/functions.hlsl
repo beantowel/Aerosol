@@ -314,8 +314,9 @@ DimensionlessSpectrum ComputeTransmittanceToTopAtmosphereBoundary(
 {
     assert(r >= atmosphere.bottom_radius && r <= atmosphere.top_radius);
     assert(mu >= -1.0 && mu <= 1.0);
-    return exp(-(
-        atmosphere.rayleigh_scattering * ComputeOpticalLengthToTopAtmosphereBoundary(atmosphere, atmosphere.rayleigh_density, r, mu) + atmosphere.mie_extinction * ComputeOpticalLengthToTopAtmosphereBoundary(atmosphere, atmosphere.mie_density, r, mu) + atmosphere.absorption_extinction * ComputeOpticalLengthToTopAtmosphereBoundary(atmosphere, atmosphere.absorption_density, r, mu)));
+    // return exp(-(...
+    return -(
+        atmosphere.rayleigh_scattering * ComputeOpticalLengthToTopAtmosphereBoundary(atmosphere, atmosphere.rayleigh_density, r, mu) + atmosphere.mie_extinction * ComputeOpticalLengthToTopAtmosphereBoundary(atmosphere, atmosphere.mie_density, r, mu) + atmosphere.absorption_extinction * ComputeOpticalLengthToTopAtmosphereBoundary(atmosphere, atmosphere.absorption_density, r, mu));
 }
 
 /*
@@ -505,17 +506,17 @@ DimensionlessSpectrum GetTransmittance(
 
     if (ray_r_mu_intersects_ground) {
         return min(
-            GetTransmittanceToTopAtmosphereBoundary(
-                atmosphere, transmittance_texture, r_d, -mu_d)
-                / GetTransmittanceToTopAtmosphereBoundary(
-                    atmosphere, transmittance_texture, r, -mu),
+            exp(GetTransmittanceToTopAtmosphereBoundary(
+                    atmosphere, transmittance_texture, r_d, -mu_d)
+                - GetTransmittanceToTopAtmosphereBoundary(
+                    atmosphere, transmittance_texture, r, -mu)),
             DimensionlessSpectrum(1.0, 1.0, 1.0));
     } else {
         return min(
-            GetTransmittanceToTopAtmosphereBoundary(
-                atmosphere, transmittance_texture, r, mu)
-                / GetTransmittanceToTopAtmosphereBoundary(
-                    atmosphere, transmittance_texture, r_d, mu_d),
+            exp(GetTransmittanceToTopAtmosphereBoundary(
+                    atmosphere, transmittance_texture, r, mu)
+                - GetTransmittanceToTopAtmosphereBoundary(
+                    atmosphere, transmittance_texture, r_d, mu_d)),
             DimensionlessSpectrum(1.0, 1.0, 1.0));
     }
 }
@@ -558,8 +559,8 @@ DimensionlessSpectrum GetTransmittanceToSun(
 {
     Number sin_theta_h = atmosphere.bottom_radius / r;
     Number cos_theta_h = -sqrt(max(1.0 - sin_theta_h * sin_theta_h, 0.0));
-    return GetTransmittanceToTopAtmosphereBoundary(
-               atmosphere, transmittance_texture, r, mu_s)
+    return exp(GetTransmittanceToTopAtmosphereBoundary(
+               atmosphere, transmittance_texture, r, mu_s))
         * smoothstep(-sin_theta_h * atmosphere.sun_angular_radius / rad,
             sin_theta_h * atmosphere.sun_angular_radius / rad,
             mu_s - cos_theta_h);
@@ -1432,7 +1433,7 @@ IrradianceSpectrum ComputeDirectIrradiance(
     // the Sun disc.
     Number average_cosine_factor = mu_s < -alpha_s ? 0.0 : (mu_s > alpha_s ? mu_s : (mu_s + alpha_s) * (mu_s + alpha_s) / (4.0 * alpha_s));
 
-    return atmosphere.solar_irradiance * GetTransmittanceToTopAtmosphereBoundary(atmosphere, transmittance_texture, r, mu_s) * average_cosine_factor;
+    return atmosphere.solar_irradiance * exp(GetTransmittanceToTopAtmosphereBoundary(atmosphere, transmittance_texture, r, mu_s)) * average_cosine_factor;
 }
 
 /*
@@ -1693,7 +1694,7 @@ RadianceSpectrum GetSkyRadiance(
     Number nu = dot(view_ray, sun_direction);
     bool ray_r_mu_intersects_ground = RayIntersectsGround(atmosphere, r, mu);
 
-    transmittance = ray_r_mu_intersects_ground ? 0.0 : GetTransmittanceToTopAtmosphereBoundary(atmosphere, transmittance_texture, r, mu);
+    transmittance = ray_r_mu_intersects_ground ? 0.0 : exp(GetTransmittanceToTopAtmosphereBoundary(atmosphere, transmittance_texture, r, mu));
     IrradianceSpectrum single_mie_scattering;
     IrradianceSpectrum scattering;
     if (shadow_length == 0.0 * m) {

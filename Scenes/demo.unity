@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 1469353122}
-  m_IndirectSpecularColor: {r: 0.6011738, g: 0.49391985, b: 0.46372706, a: 1}
+  m_IndirectSpecularColor: {r: 0.47365272, g: 0.50475246, b: 0.60486794, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -273,6 +273,11 @@ PrefabInstance:
       propertyPath: m_Name
       value: AerosolSkybox
       objectReference: {fileID: 0}
+    - target: {fileID: 3813275628252301043, guid: 397572c92cb47a1489e8ae47da5d407b,
+        type: 3}
+      propertyPath: UseRunTimeTexture
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 397572c92cb47a1489e8ae47da5d407b, type: 3}
 --- !u!1 &1469353121
@@ -361,10 +366,10 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1469353121}
-  m_LocalRotation: {x: 0, y: 0.9999757, z: -0.006981222, w: 0}
+  m_LocalRotation: {x: -0, y: -0.96147805, z: 0.27488196, w: -0}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
   m_RootOrder: 1
-  m_LocalEulerAnglesHint: {x: 0.8, y: 180, z: 0}
+  m_LocalEulerAnglesHint: {x: 391.91, y: 180, z: 0}
