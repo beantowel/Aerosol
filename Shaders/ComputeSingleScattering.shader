@@ -9,7 +9,7 @@ Shader "Aerosol/ComputeSingleScattering"
         Pass {
             Cull Off ZWrite Off ZTest Always
             HLSLPROGRAM
-            #pragma vertex v2f
+            #pragma vertex vertex
             #pragma fragment frag
 
             #include "UnityCG.cginc"
@@ -38,7 +38,7 @@ Shader "Aerosol/ComputeSingleScattering"
                 float4 scattering : SV_Target2;
             };
 
-            VS_OUTPUT v2f(VS_INPUT v)
+            VS_OUTPUT vertex(VS_INPUT v)
             {
                 VS_OUTPUT output;
                 output.pos = UnityObjectToClipPos(v.vertex);

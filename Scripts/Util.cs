@@ -6,7 +6,7 @@ namespace Aerosol {
         static readonly CommandBuffer buffer = new CommandBuffer();
         static readonly Matrix4x4 view = Matrix4x4.identity;
         static readonly Matrix4x4 ortho = Matrix4x4.Ortho(-1, 1, -1, 1, -1, 1);
-        static Mesh fullMesh;
+        static Mesh fullTri;
 
         static void InitBuffer() {
             buffer.Clear();
@@ -52,8 +52,8 @@ namespace Aerosol {
         }
 
         public static Mesh FullSceneTri(float scale = 1) {
-            if (fullMesh != null) {
-                return fullMesh;
+            if (fullTri != null) {
+                return fullTri;
             }
             Vector3[] vertices = new Vector3[] {
                 new Vector3(-1, -1, 0) * scale,
@@ -68,11 +68,11 @@ namespace Aerosol {
             int[] triangles = new int[]{
                 0, 1, 2
             };
-            fullMesh = new Mesh();
-            fullMesh.vertices = vertices;
-            fullMesh.uv = uv;
-            fullMesh.triangles = triangles;
-            return fullMesh;
+            fullTri = new Mesh();
+            fullTri.vertices = vertices;
+            fullTri.uv = uv;
+            fullTri.triangles = triangles;
+            return fullTri;
         }
     }
 }

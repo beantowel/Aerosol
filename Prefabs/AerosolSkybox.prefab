@@ -43,17 +43,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 005f94f7a17da404f8ab42c79494d4bc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  Assets:
-    Skybox: {fileID: 2100000, guid: 5620b6786a8eebc43ac41b78dc3267fe, type: 2}
-    ComputeTransmittance: {fileID: 2100000, guid: c1d8b5444b9bf7e468a4c0540510ce8e,
-      type: 2}
-    ComputeDirectIrradiance: {fileID: 2100000, guid: 048b0ea5660a3a1428e609436fd40e8c,
-      type: 2}
-    ComputeSingleScattering: {fileID: 2100000, guid: 4340bb753ab0a674dbd95addfdb786bd,
-      type: 2}
-    ComputeScatteringDensity: {fileID: 2100000, guid: 57f4ada913c7c544daacecd6d716bbef,
-      type: 2}
-    ComputeIndirectIrradiance: {fileID: 2100000, guid: 3cfbf107681c35642af86dbb9f855b25,
-      type: 2}
-    ComputeMultipleScattering: {fileID: 2100000, guid: 386b54bba7dbccc4489b4259a5c6fa9e,
-      type: 2}
+  Config: {fileID: 11400000, guid: c105dc3febf504044a597b14b5c99aca, type: 2}

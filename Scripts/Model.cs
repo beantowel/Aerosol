@@ -4,17 +4,6 @@ using UnityEngine;
 using UnityEngine.Assertions;
 
 namespace Aerosol {
-    [System.Serializable]
-    public struct Assets {
-        public Material Skybox;
-        public Material ComputeTransmittance;
-        public Material ComputeDirectIrradiance;
-        public Material ComputeSingleScattering;
-        public Material ComputeScatteringDensity;
-        public Material ComputeIndirectIrradiance;
-        public Material ComputeMultipleScattering;
-    }
-
     public struct DensityProfileLayer {
         public double Width;
         public double ExpTerm;
@@ -23,6 +12,7 @@ namespace Aerosol {
         public double ConstantTerm;
     }
 
+    [System.Serializable]
     public struct ModelParams {
         public List<double> Wavelengths;
         public List<double> SolarIrradiance;
@@ -43,18 +33,20 @@ namespace Aerosol {
     }
 
     class Model {
-        Assets assets;
         public RenderTexture Transmittance;
         public RenderTexture Scattering;
         public RenderTexture Irradiance;
+        public Config Conf;
 
-        public RenderTextureDescriptor TrnDesc, SctDesc, IrrDesc;
+        RenderTextureDescriptor TrnDesc, SctDesc, IrrDesc;
+        Material ComputeTransmittance, ComputeDirectIrradiance,
+            ComputeSingleScattering, ComputeScatteringDensity,
+            ComputeIndirectIrradiance, ComputeMultipleScattering;
 
         public Model(
-            ModelParams para,
-            Assets assets
+            Config conf
         ) {
-            this.assets = assets;
+            Conf = conf;
             TrnDesc = Util.Tex2Desc(Const.TransmittanceTextureSize.Width, Const.TransmittanceTextureSize.Height);
             SctDesc = Util.Tex3Desc();
             IrrDesc = Util.Tex2Desc(Const.IrradianceTextureSize.Width, Const.IrradianceTextureSize.Height);
@@ -67,6 +59,15 @@ namespace Aerosol {
         }
 
         public void Init(uint numScatteringOrders = 4) {
+            if (ComputeTransmittance == null) {
+                // ??= does not work here because of bad bad UnityEngine.Object
+                ComputeTransmittance = new Material(Conf.ComputeTransmittance);
+                ComputeDirectIrradiance = new Material(Conf.ComputeDirectIrradiance);
+                ComputeSingleScattering = new Material(Conf.ComputeSingleScattering);
+                ComputeScatteringDensity = new Material(Conf.ComputeScatteringDensity);
+                ComputeIndirectIrradiance = new Material(Conf.ComputeIndirectIrradiance);
+                ComputeMultipleScattering = new Material(Conf.ComputeMultipleScattering);
+            }
             // The pre-computations require temporary textures, in particular to store the
             // contribution of one scattering order, which is needed to compute the next
             // order of scattering (the final precomputed textures store the sum of all
@@ -104,53 +105,52 @@ namespace Aerosol {
         ) {
             Debug.Log("pre-compute model");
             // Compute the transmittance, and store it in transmittance_texture_.
-            Util.DrawRect(assets.ComputeTransmittance, Transmittance);
+            Util.DrawRect(ComputeTransmittance, Transmittance);
 
             // Compute the direct irradiance, store it in delta_irradiance_texture.
             // (we don't want the direct irradiance in irradiance_texture_,
             // but only the irradiance from the sky).
-            assets.ComputeDirectIrradiance.SetTexture("transmittance_texture", Transmittance);
-            Util.DrawRect(assets.ComputeDirectIrradiance,
-                deltaIrradiance, Irradiance);
+            ComputeDirectIrradiance.SetTexture("transmittance_texture", Transmittance);
+            Util.DrawRect(ComputeDirectIrradiance, deltaIrradiance, Irradiance);
 
             // Compute the rayleigh and mie single scattering, store them in
             // delta_rayleigh_scattering_texture and delta_mie_scattering_texture, and
             // either store them or accumulate them in scattering_texture_ and
             // optional_single_mie_scattering_texture_.
-            assets.ComputeSingleScattering.SetMatrix("luminance_from_radiance", luminanceFromRadiance);
-            assets.ComputeSingleScattering.SetTexture("transmittance_texture", Transmittance);
-            Util.DrawCube(assets.ComputeSingleScattering,
+            ComputeSingleScattering.SetMatrix("luminance_from_radiance", luminanceFromRadiance);
+            ComputeSingleScattering.SetTexture("transmittance_texture", Transmittance);
+            Util.DrawCube(ComputeSingleScattering,
                 deltaRayleighScattering, deltaMieScattering, Scattering);
             // Compute the 2nd, 3rd and 4th order of scattering, in sequence.
             for (uint order = 2; order <= numScatteringOrders; order++) {
                 // Compute the scattering density, and store it in
                 // delta_scattering_density_texture.
-                assets.ComputeScatteringDensity.SetTexture("transmittance_texture", Transmittance);
-                assets.ComputeScatteringDensity.SetTexture("single_rayleigh_scattering_texture", deltaRayleighScattering);
-                assets.ComputeScatteringDensity.SetTexture("single_mie_scattering_texture", deltaMieScattering);
-                assets.ComputeScatteringDensity.SetTexture("multiple_scattering_texture", deltaMultipleScattering);
-                assets.ComputeScatteringDensity.SetTexture("irradiance_texture", deltaIrradiance);
-                assets.ComputeScatteringDensity.SetInteger("scattering_order", (int)order);
-                Util.DrawCube(assets.ComputeScatteringDensity, deltaScatteringDensity);
+                ComputeScatteringDensity.SetTexture("transmittance_texture", Transmittance);
+                ComputeScatteringDensity.SetTexture("single_rayleigh_scattering_texture", deltaRayleighScattering);
+                ComputeScatteringDensity.SetTexture("single_mie_scattering_texture", deltaMieScattering);
+                ComputeScatteringDensity.SetTexture("multiple_scattering_texture", deltaMultipleScattering);
+                ComputeScatteringDensity.SetTexture("irradiance_texture", deltaIrradiance);
+                ComputeScatteringDensity.SetInteger("scattering_order", (int)order);
+                Util.DrawCube(ComputeScatteringDensity, deltaScatteringDensity);
 
                 // Compute the indirect irradiance, store it in delta_irradiance_texture and
                 // accumulate it in irradiance_texture_.
-                assets.ComputeIndirectIrradiance.SetMatrix("luminance_from_radiance", luminanceFromRadiance);
-                assets.ComputeIndirectIrradiance.SetTexture("single_rayleigh_scattering_texture", deltaRayleighScattering);
-                assets.ComputeIndirectIrradiance.SetTexture("single_mie_scattering_texture", deltaMieScattering);
-                assets.ComputeIndirectIrradiance.SetTexture("multiple_scattering_texture", deltaMultipleScattering);
-                assets.ComputeIndirectIrradiance.SetInteger("scattering_order", (int)order - 1);
+                ComputeIndirectIrradiance.SetMatrix("luminance_from_radiance", luminanceFromRadiance);
+                ComputeIndirectIrradiance.SetTexture("single_rayleigh_scattering_texture", deltaRayleighScattering);
+                ComputeIndirectIrradiance.SetTexture("single_mie_scattering_texture", deltaMieScattering);
+                ComputeIndirectIrradiance.SetTexture("multiple_scattering_texture", deltaMultipleScattering);
+                ComputeIndirectIrradiance.SetInteger("scattering_order", (int)order - 1);
                 deltaIrradiance.DiscardContents();
-                Util.DrawRect(assets.ComputeIndirectIrradiance, deltaIrradiance, Irradiance);
+                Util.DrawRect(ComputeIndirectIrradiance, deltaIrradiance, Irradiance);
 
                 // Compute the multiple scattering, store it in
                 // delta_multiple_scattering_texture, and accumulate it in
                 // scattering_texture_.
-                assets.ComputeMultipleScattering.SetMatrix("luminance_from_radiance", luminanceFromRadiance);
-                assets.ComputeMultipleScattering.SetTexture("transmittance_texture", Transmittance);
-                assets.ComputeMultipleScattering.SetTexture("scattering_density_texture", deltaScatteringDensity);
+                ComputeMultipleScattering.SetMatrix("luminance_from_radiance", luminanceFromRadiance);
+                ComputeMultipleScattering.SetTexture("transmittance_texture", Transmittance);
+                ComputeMultipleScattering.SetTexture("scattering_density_texture", deltaScatteringDensity);
                 deltaMultipleScattering.DiscardContents();
-                Util.DrawCube(assets.ComputeMultipleScattering, deltaMultipleScattering, Scattering);
+                Util.DrawCube(ComputeMultipleScattering, deltaMultipleScattering, Scattering);
             }
         }
 
