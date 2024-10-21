@@ -12,7 +12,7 @@ Shader "Aerosol/ComputeMultipleScattering"
             Blend 0 Off
             Blend 1 One One
             HLSLPROGRAM
-            #pragma vertex vertex
+            #pragma vertex vert
             #pragma fragment frag
 
             #include "UnityCG.cginc"
@@ -41,7 +41,7 @@ Shader "Aerosol/ComputeMultipleScattering"
                 float4 scattering : SV_Target1;
             };
 
-            VS_OUTPUT vertex(VS_INPUT v)
+            VS_OUTPUT vert(VS_INPUT v)
             {
                 VS_OUTPUT output;
                 output.pos = UnityObjectToClipPos(v.vertex);

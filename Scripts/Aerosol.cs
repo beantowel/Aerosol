@@ -1,5 +1,4 @@
 using System.IO;
-using UnityEditor;
 using UnityEngine;
 namespace Aerosol {
     [ExecuteAlways]
@@ -11,16 +10,14 @@ namespace Aerosol {
             Init();
         }
 
-        void OnValidate() {
-            model?.Init();
-        }
-
         void Init() {
             model = new Model(Config);
             model.Init();
             Config.Skybox.SetTexture("transmittance_texture", model.Transmittance);
             Config.Skybox.SetTexture("scattering_texture", model.Scattering);
             Config.Skybox.SetTexture("irradiance_texture", model.Irradiance);
+            Config.Skybox.SetFloat("h_origin", 0);
+            RenderSettings.skybox = Config.Skybox;
         }
 
         [ContextMenu("GenHeader")]

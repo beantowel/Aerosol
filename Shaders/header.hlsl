@@ -1,4 +1,7 @@
 
+#ifndef AEROSOL_HEADER_H
+#define AEROSOL_HEADER_H
+
 #define IN(x) const in x
 #define OUT(x) out x
 #define TEMPLATE(x)
@@ -50,3 +53,5 @@ AtmosphereParameters _ATMOSPHERE()
 static const AtmosphereParameters ATMOSPHERE = _ATMOSPHERE();
 static const float3 SKY_SPECTRAL_RADIANCE_TO_LUMINANCE = float3(114975.3,71305.86,65311.04);
 static const float3 SUN_SPECTRAL_RADIANCE_TO_LUMINANCE = float3(98242.78,69954.39,66475.27);
+
+#endif // AEROSOL_HEADER_H

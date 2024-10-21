@@ -51,6 +51,9 @@ power and luminous power (wavelength is also a length, but we distinguish the
 two for increased clarity).
 */
 
+#ifndef AEROSOL_DEFINITIONS_H
+#define AEROSOL_DEFINITIONS_H
+
 #define Length float
 #define Wavelength float
 #define Angle float
@@ -152,12 +155,12 @@ static const LuminousPower lm = 1.0;
 as well as some derived units (kilometer km, kilocandela kcd, degree deg):
 */
 
-static const float PI = 3.14159265358979323846;
+static const float PI_ATOM = 3.14159265358979323846; // URP syntax collision
 
 static const Length km = 1000.0 * m;
 static const Area m2 = m * m;
 static const Volume m3 = m * m * m;
-static const Angle pi = PI * rad;
+static const Angle pi = PI_ATOM * rad;
 static const Angle deg = pi / 180.0;
 static const Irradiance watt_per_square_meter = watt / m2;
 static const Radiance watt_per_square_meter_per_sr = watt / (m2 * sr);
@@ -271,3 +274,5 @@ DensityProfile _DensityProfile(DensityProfileLayer l0, DensityProfileLayer l1)
     p.layers[1] = l1;
     return p;
 }
+
+#endif // AEROSOL_DEFINITIONS_H

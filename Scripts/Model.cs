@@ -59,6 +59,7 @@ namespace Aerosol {
         }
 
         public void Init(uint numScatteringOrders = 4) {
+            Debug.LogFormat("init aerosol model");
             if (ComputeTransmittance == null) {
                 // ??= does not work here because of bad bad UnityEngine.Object
                 ComputeTransmittance = new Material(Conf.ComputeTransmittance);
@@ -215,14 +216,15 @@ namespace Aerosol {
         }
 
         public static string Header(ModelParams para, Vector3 lambdas) {
+            Func<FormattableString , string> inv = FormattableString.Invariant;
             Func<List<double>, double, string> toString = (List<double> spectrum, double scale) => {
                 double r = Model.Interpolate(para.Wavelengths, spectrum, lambdas.x) * scale;
                 double g = Model.Interpolate(para.Wavelengths, spectrum, lambdas.y) * scale;
                 double b = Model.Interpolate(para.Wavelengths, spectrum, lambdas.z) * scale;
-                return $"float3({r:g},{g:g},{b:g})";
+                return inv($"float3({r:g},{g:g},{b:g})");
             };
             Func<DensityProfileLayer, string> densityLayer = (DensityProfileLayer layer) => {
-                return $@"_DensityProfileLayer({layer.Width / para.LengthUnitInMeters},{layer.ExpTerm},{layer.ExpScale * para.LengthUnitInMeters},{layer.LinearTerm * para.LengthUnitInMeters},{layer.ConstantTerm})";
+                return inv($@"_DensityProfileLayer({layer.Width / para.LengthUnitInMeters},{layer.ExpTerm},{layer.ExpScale * para.LengthUnitInMeters},{layer.LinearTerm * para.LengthUnitInMeters},{layer.ConstantTerm})");
             };
             Func<List<DensityProfileLayer>, string> densityProfile = (List<DensityProfileLayer> layers) => {
                 const int layerCount = 2;
@@ -231,10 +233,10 @@ namespace Aerosol {
                 }
 
                 var nl = Environment.NewLine;
-                string result = $"_DensityProfile({nl}        ";
+                string result = inv($"_DensityProfile({nl}        ");
                 for (int i = 0; i < layerCount; i++) {
                     result += densityLayer(layers[i]);
-                    result += i < layerCount - 1 ? $",{nl}        " : ")";
+                    result += i < layerCount - 1 ? inv($",{nl}        ") : ")";
                 }
                 return result;
             };
@@ -243,7 +245,10 @@ namespace Aerosol {
             var sunRGB = Model.ComputeSpectralRadianceToLuminanceFactors(para.Wavelengths, para.SolarIrradiance, 0);
             // $"float3({r},{g},{b})"
 
-            string header = $@"
+            string header = inv($@"
+#ifndef AEROSOL_HEADER_H
+#define AEROSOL_HEADER_H
+
 #define IN(x) const in x
 #define OUT(x) out x
 #define TEMPLATE(x)
@@ -289,7 +294,9 @@ AtmosphereParameters _ATMOSPHERE()
 static const AtmosphereParameters ATMOSPHERE = _ATMOSPHERE();
 static const float3 SKY_SPECTRAL_RADIANCE_TO_LUMINANCE = float3({skyRGB.x},{skyRGB.y},{skyRGB.z});
 static const float3 SUN_SPECTRAL_RADIANCE_TO_LUMINANCE = float3({sunRGB.x},{sunRGB.y},{sunRGB.z});
-";
+
+#endif // AEROSOL_HEADER_H
+");
             return header;
         }
     }

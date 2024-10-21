@@ -12,7 +12,7 @@ Shader "Aerosol/ComputeIndirectIrradiance"
             Blend 0 Off
             Blend 1 One One
             HLSLPROGRAM
-            #pragma vertex vertex
+            #pragma vertex vert
             #pragma fragment frag
 
             #include "UnityCG.cginc"
@@ -42,7 +42,7 @@ Shader "Aerosol/ComputeIndirectIrradiance"
                 float3 irradiance : SV_Target1;
             };
 
-            VS_OUTPUT vertex(VS_INPUT v)
+            VS_OUTPUT vert(VS_INPUT v)
             {
                 VS_OUTPUT output;
                 output.pos = UnityObjectToClipPos(v.vertex);

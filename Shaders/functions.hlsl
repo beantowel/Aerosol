@@ -110,6 +110,9 @@ be compiled either with a GLSL compiler or with a C++ compiler (see the
 values slightly outside their theoretical bounds:
 */
 
+#ifndef AEROSOL_FUNCTIONS_H
+#define AEROSOL_FUNCTIONS_H
+
 #include "definitions.hlsl"
 #include "header.hlsl"
 
@@ -741,13 +744,13 @@ for better angular precision. We provide them here for completeness:
 
 InverseSolidAngle RayleighPhaseFunction(Number nu)
 {
-    InverseSolidAngle k = 3.0 / (16.0 * PI * sr);
+    InverseSolidAngle k = 3.0 / (16.0 * PI_ATOM * sr);
     return k * (1.0 + nu * nu);
 }
 
 InverseSolidAngle MiePhaseFunction(Number g, Number nu)
 {
-    InverseSolidAngle k = 3.0 / (8.0 * PI * sr) * (1.0 - g * g) / (2.0 + g * g);
+    InverseSolidAngle k = 3.0 / (8.0 * PI_ATOM * sr) * (1.0 - g * g) / (2.0 + g * g);
     return k * (1.0 + nu * nu) / pow(1.0 + g * g - 2.0 * g * nu, 1.5);
 }
 
@@ -1223,7 +1226,7 @@ RadianceDensitySpectrum ComputeScatteringDensity(
             IrradianceSpectrum ground_irradiance = GetIrradiance(
                 atmosphere, irradiance_texture, atmosphere.bottom_radius,
                 dot(ground_normal, omega_s));
-            incident_radiance += transmittance_to_ground * ground_albedo * (1.0 / (PI * sr)) * ground_irradiance;
+            incident_radiance += transmittance_to_ground * ground_albedo * (1.0 / (PI_ATOM * sr)) * ground_irradiance;
 
             // The radiance finally scattered from direction omega_i towards direction
             // -omega is the product of the incident radiance, the scattering
@@ -1842,3 +1845,5 @@ IrradianceSpectrum GetSunAndSkyIrradiance(
     // Direct irradiance.
     return atmosphere.solar_irradiance * GetTransmittanceToSun(atmosphere, transmittance_texture, r, mu_s) * max(dot(normal, sun_direction), 0.0);
 }
+
+#endif // AEROSOL_FUNCTIONS_H

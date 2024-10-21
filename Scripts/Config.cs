@@ -10,5 +10,14 @@ namespace Aerosol {
         public Shader ComputeIndirectIrradiance;
         public Shader ComputeMultipleScattering;
         public ModelParams Params = Const.DefaultParam();
+
+        public void OnEnable() {
+            ComputeTransmittance ??= Shader.Find("Aerosol/ComputeTransmittance");
+            ComputeDirectIrradiance ??= Shader.Find("Aerosol/ComputeDirectIrradiance");
+            ComputeSingleScattering ??= Shader.Find("Aerosol/ComputeSingleScattering");
+            ComputeScatteringDensity ??= Shader.Find("Aerosol/ComputeScatteringDensity");
+            ComputeIndirectIrradiance ??= Shader.Find("Aerosol/ComputeIndirectIrradiance");
+            ComputeMultipleScattering ??= Shader.Find("Aerosol/ComputeMultipleScattering");
+        }
     }
 }
